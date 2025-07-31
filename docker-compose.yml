@@ -1,0 +1,44 @@
+services:
+  valkey:
+    image: valkey/valkey:7-alpine
+    container_name: notification-valkey
+    ports:
+      - "6379:6379"
+    volumes:
+      - valkey_data:/data
+    command: valkey-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - notification-network
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: notification-service
+    ports:
+      - "8000:8000"
+      - "9090:9090"
+    environment:
+      - VALKEY_URL=redis://valkey:6379
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+    depends_on:
+      valkey:
+        condition: service_healthy
+    networks:
+      - notification-network
+    volumes:
+      - .:/app
+    command: uv run python -m src.notification_service.main
+
+volumes:
+  valkey_data:
+
+networks:
+  notification-network:
+    driver: bridge 
