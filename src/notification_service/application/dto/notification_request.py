@@ -83,7 +83,7 @@ class TopicNotificationRequest(BaseModel):
     priority: str = Field("normal", description="Notification priority")
     collapse_key: Optional[str] = Field(None, description="FCM collapse key")
     ttl: Optional[int] = Field(None, description="Time to live in seconds")
-    scheduled_at: Optional[datetime] = Field(None, description="Scheduled delivery time")
+    scheduled_at: Optional[datetime] = Field(datetime.now(timezone.utc), description="Scheduled delivery time")  # noqa: F821
     
     @validator("topic")
     def validate_topic(cls, v: str) -> str:
